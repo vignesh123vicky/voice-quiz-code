@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #34495e;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .question-container p {
+            font-weight: bold;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .option-btn {
+            background-color: #3498db;
+            color: #fff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            max-width: 120px;
+        }
+
+        .option-btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .voice-button {
+            background-color: #2ecc71;
+        }
+
+        .voice-button:hover {
+            background-color: #27ae60;
+        }
+
+        .next-button {
+            margin-top: 15px;
+            background-color: #e74c3c;
+        }
+
+        .next-button:hover {
+            background-color: #c0392b;
+        }
+
+        .result {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 15px;
+        }
+
+        .home-button {
+            margin-top: 15px;
+            background-color: #2ecc71;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .home-button:hover {
+            background-color: #27ae60;
+        }
+
+    </style>
+    <script>
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+
+        // Shuffle questions randomly
+        function shuffleQuestions() {
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]]; // Swap
+            }
+        }
+
+        function speakQuestion(questionNumber, questionText) {
+            const utterance = new SpeechSynthesisUtterance(`Question ${questionNumber}: ${questionText}`);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function updateQuestion() {
+            if (currentQuestionIndex < 10) { // Limit to 10 questions
+                const question = questions[currentQuestionIndex];
+                const questionNumber = currentQuestionIndex + 1;
+                document.getElementById('question-number').innerText = `Question ${questionNumber}`;
+                document.getElementById('question-text').innerText = question.question;
+
+                const optionsContainer = document.getElementById('options-container');
+                optionsContainer.innerHTML = '';
+
+                question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('button');
+                    optionElement.classList.add('option-btn');
+                    optionElement.innerText = option;
+                    optionElement.onclick = function () {
+                        checkAnswer(option, optionElement);
+                    };
+                    optionsContainer.appendChild(optionElement);
+                });
+
+                speakQuestion(questionNumber, question.question);
+            } else {
+                showResults();
+            }
+        }
+
+        function checkAnswer(selectedOption, optionElement) {
+            const correctAnswer = questions[currentQuestionIndex].correctAnswer.toLowerCase();
+
+            // Reveal the correct answer after selection
+            const allOptions = document.querySelectorAll('.option-btn');
+            allOptions.forEach(option => {
+                if (option.innerText.toLowerCase() === correctAnswer) {
+                    option.style.backgroundColor = 'green'; // Correct answer
+                } else {
+                    option.style.backgroundColor = 'red'; // Incorrect answers
+                }
+            });
+
+            if (selectedOption.toLowerCase() === correctAnswer) {
+                score++;
+            }
+
+            // Disable further interaction
+            allOptions.forEach(option => option.disabled = true);
+
+            // Wait for 1 second before moving to the next question
+            setTimeout(() => {
+                currentQuestionIndex++;
+                updateQuestion();
+            }, 1000);
+        }
+        function showResults() {
+    const quizContainer = document.getElementById('quiz-container');
+    quizContainer.innerHTML = `
+        <h2>Quiz Completed!</h2>
+        <p class="result">Your final score is: ${score}</p>
+        <button class="home-button" onclick="goToHome()">Go to Home</button>
+        `;
+        }
+
+        function goToHome() {
+            // Replace with your home page URL
+            window.location.href = '/'; // Home page URL
+        }
+
+        // Voice recognition function
+        function startVoiceRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const voiceResponse = event.results[0][0].transcript.toLowerCase();
+                console.log('Voice Response:', voiceResponse);
+                checkAnswer(voiceResponse);
+            };
+
+            recognition.onerror = function(event) {
+                alert("Voice recognition error: " + event.error);
+            };
+        }
+        const questions = [
+    // General Knowledge (GK) - Grades 6-12
+    {
+        question: "What is the chemical symbol for water?",
+        options: ["H2O", "O2", "CO2", "H2"],
+        correctAnswer: "H2O"
+    },
+    {
+        question: "Who was the first person to walk on the moon?",
+        options: ["Yuri Gagarin", "Neil Armstrong", "Buzz Aldrin", "Michael Collins"],
+        correctAnswer: "Neil Armstrong"
+    },
+    {
+        question: "Which planet is the hottest in our solar system?",
+        options: ["Earth", "Venus", "Mars", "Jupiter"],
+        correctAnswer: "Venus"
+    },
+    {
+        question: "What is the largest ocean on Earth?",
+        options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+        correctAnswer: "Pacific Ocean"
+    },
+    {
+        question: "Who wrote the novel 'Harry Potter and the Sorcerer's Stone'?",
+        options: ["J.R.R. Tolkien", "J.K. Rowling", "George R.R. Martin", "Suzanne Collins"],
+        correctAnswer: "J.K. Rowling"
+    },
+    {
+        question: "Which of these elements is a noble gas?",
+        options: ["Oxygen", "Nitrogen", "Argon", "Carbon"],
+        correctAnswer: "Argon"
+    },
+    {
+        question: "What is the largest mammal in the world?",
+        options: ["African Elephant", "Blue Whale", "Giraffe", "Shark"],
+        correctAnswer: "Blue Whale"
+    },
+    {
+        question: "Which of the following is the longest river in the world?",
+        options: ["Amazon River", "Nile River", "Yangtze River", "Mississippi River"],
+        correctAnswer: "Nile River"
+    },
+    {
+        question: "In which year did the Titanic sink?",
+        options: ["1910", "1912", "1920", "1905"],
+        correctAnswer: "1912"
+    },
+    {
+        question: "What is the capital of France?",
+        options: ["Berlin", "Madrid", "Paris", "Rome"],
+        correctAnswer: "Paris"
+    },
+    {
+        question: "Which country is the largest by area?",
+        options: ["United States", "China", "Russia", "Canada"],
+        correctAnswer: "Russia"
+    },
+    {
+        question: "Which language has the most native speakers in the world?",
+        options: ["Spanish", "Mandarin", "English", "Hindi"],
+        correctAnswer: "Mandarin"
+    },
+    {
+        question: "What is the process by which plants make their own food?",
+        options: ["Respiration", "Digestion", "Photosynthesis", "Fertilization"],
+        correctAnswer: "Photosynthesis"
+    },
+    {
+        question: "What is the hardest natural substance on Earth?",
+        options: ["Gold", "Diamond", "Iron", "Platinum"],
+        correctAnswer: "Diamond"
+    },
+    {
+        question: "In which country would you find the famous landmark, the Great Barrier Reef?",
+        options: ["United States", "Australia", "South Africa", "Brazil"],
+        correctAnswer: "Australia"
+    },
+    {
+        question: "Who was the first female Prime Minister of the United Kingdom?",
+        options: ["Margaret Thatcher", "Indira Gandhi", "Angela Merkel", "Elizabeth II"],
+        correctAnswer: "Margaret Thatcher"
+    },
+    {
+        question: "In which year did World War I begin?",
+        options: ["1910", "1914", "1920", "1939"],
+        correctAnswer: "1914"
+    },
+    {
+        question: "What is the currency of Japan?",
+        options: ["Won", "Yen", "Ringgit", "Peso"],
+        correctAnswer: "Yen"
+    },
+    {
+        question: "What is the smallest planet in our solar system?",
+        options: ["Mercury", "Venus", "Mars", "Earth"],
+        correctAnswer: "Mercury"
+    },
+    {
+        question: "Which animal is known as the 'King of the Jungle'?",
+        options: ["Elephant", "Lion", "Tiger", "Giraffe"],
+        correctAnswer: "Lion"
+    },
+    {
+        question: "Who invented the telephone?",
+        options: ["Nikola Tesla", "Thomas Edison", "Alexander Graham Bell", "Benjamin Franklin"],
+        correctAnswer: "Alexander Graham Bell"
+    },
+    {
+        question: "What is the hardest natural material on Earth?",
+        options: ["Gold", "Diamond", "Platinum", "Iron"],
+        correctAnswer: "Diamond"
+    },
+    {
+        question: "Who was the 16th President of the United States?",
+        options: ["George Washington", "Abraham Lincoln", "Thomas Jefferson", "Ulysses S. Grant"],
+        correctAnswer: "Abraham Lincoln"
+    },
+    {
+        question: "What is the capital of Japan?",
+        options: ["Seoul", "Beijing", "Tokyo", "Manila"],
+        correctAnswer: "Tokyo"
+    },
+    {
+        question: "Which continent is the Sahara Desert located in?",
+        options: ["Asia", "Africa", "Australia", "South America"],
+        correctAnswer: "Africa"
+    },
+    {
+        question: "Who discovered gravity?",
+        options: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"],
+        correctAnswer: "Isaac Newton"
+    },
+    {
+        question: "What is the largest desert in the world?",
+        options: ["Gobi Desert", "Kalahari Desert", "Sahara Desert", "Antarctic Desert"],
+        correctAnswer: "Antarctic Desert"
+    },
+    {
+        question: "What is the most commonly spoken language in the world?",
+        options: ["Mandarin", "English", "Spanish", "Hindi"],
+        correctAnswer: "English"
+    },
+    // AI and Computer Science related questions
+    {
+        question: "Who is considered the father of Artificial Intelligence?",
+        options: ["Alan Turing", "John McCarthy", "Geoffrey Hinton", "Marvin Minsky"],
+        correctAnswer: "John McCarthy"
+    },
+    {
+        question: "Which programming language is most commonly used for Machine Learning?",
+        options: ["Java", "Python", "C++", "Ruby"],
+        correctAnswer: "Python"
+    },
+    {
+        question: "What is the main goal of deep learning in AI?",
+        options: ["To mimic the human brain", "To create a system for business management", "To perform logical reasoning", "To generate random data"],
+        correctAnswer: "To mimic the human brain"
+    },
+    {
+        question: "Which company developed the AI assistant known as Siri?",
+        options: ["Google", "Microsoft", "Apple", "Amazon"],
+        correctAnswer: "Apple"
+    },
+    {
+        question: "What is the term for the ability of a machine to learn and improve from experience without being explicitly programmed?",
+        options: ["Supervised Learning", "Reinforcement Learning", "Unsupervised Learning", "Machine Learning"],
+        correctAnswer: "Machine Learning"
+    },
+    {
+        question: "What does AI stand for?",
+        options: ["Artificial Intelligence", "Artificial Image", "Automated Intelligence", "Artificial Information"],
+        correctAnswer: "Artificial Intelligence"
+    },
+    {
+        question: "Which company is known for creating the AI-powered personal assistant Alexa?",
+        options: ["Google", "Apple", "Amazon", "Microsoft"],
+        correctAnswer: "Amazon"
+    },
+    {
+        question: "Which of these is a type of neural network used in machine learning?",
+        options: ["Convolutional Neural Networks", "Deep Neural Networks", "Recurrent Neural Networks", "All of the above"],
+        correctAnswer: "All of the above"
+    },
+    {
+        question: "Which algorithm is used in supervised learning for classification tasks?",
+        options: ["Decision Tree", "K-means", "Neural Networks", "Linear Regression"],
+        correctAnswer: "Decision Tree"
+    },
+    {
+        question: "What is the main advantage of reinforcement learning?",
+        options: ["It uses labeled data", "It learns from trial and error", "It requires no data", "It has a fixed output"],
+        correctAnswer: "It learns from trial and error"
+    },
+    {
+        question: "Which technology is used by self-driving cars for navigation?",
+        options: ["LiDAR", "Bluetooth", "Wi-Fi", "Cellular Data"],
+        correctAnswer: "LiDAR"
+    },
+    {
+        question: "What is the function of a 'training dataset' in machine learning?",
+        options: ["To test the algorithm", "To improve the model's accuracy", "To train the algorithm", "To provide real-time data"],
+        correctAnswer: "To train the algorithm"
+    },
+    {
+        question: "What does 'GPT' stand for in OpenAI's GPT models?",
+        options: ["General Purpose Text", "Generative Pretrained Transformer", "General Pretrained Text", "Global Programmed Technology"],
+        correctAnswer: "Generative Pretrained Transformer"
+    },
+    {
+        question: "Which of these is a popular framework for building AI models?",
+        options: ["TensorFlow", "Pandas", "NumPy", "Jupyter"],
+        correctAnswer: "TensorFlow"
+    },
+    {
+        question: "What is the main challenge of Natural Language Processing (NLP) in AI?",
+        options: ["Understanding text", "Creating AI that understands images", "Creating complex algorithms", "Storing large datasets"],
+        correctAnswer: "Understanding text"
+    },
+    {
+        question: "What is 'overfitting' in machine learning?",
+        options: ["When a model is too simple", "When a model is too complex for the data", "When a model works perfectly", "When a model is too fast"],
+        correctAnswer: "When a model is too complex for the data"
+    },
+    {
+        question: "What is the purpose of an activation function in a neural network?",
+        options: ["To control the output", "To add randomness", "To regulate data", "To minimize the training time"],
+        correctAnswer: "To control the output"
+    },
+    {
+        question: "Which of the following is an example of unsupervised learning?",
+        options: ["Clustering", "Classification", "Regression", "Reinforcement Learning"],
+        correctAnswer: "Clustering"
+    }
+];
+     window.onload = () => {
+            shuffleQuestions();
+            updateQuestion();
+        };
+    </script>
+</head>
+<body>
+    <div class="container" id="quiz-container">
+        <h1>Interactive Quiz</h1>
+        <div class="question-container">
+            <p id="question-number">Question 1:</p>
+            <p id="question-text"></p>
+        </div>
+        <div class="options" id="options-container"></div>
+        <button class="voice-button" onclick="startVoiceRecognition()">Answer with Voice</button>
+    </div>
+</body>
+</html>

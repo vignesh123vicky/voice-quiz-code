@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Solving Challenge</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: auto;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+
+        p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .question-container {
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .option-btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .option-btn:active {
+            background-color: #1f6f99;
+            transform: scale(1);
+        }
+
+        .result {
+            font-size: 1.5em;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .result.wrong {
+            color: red;
+        }
+
+        .result.correct {
+            color: green;
+        }
+
+        .score {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-top: 20px;
+        }
+
+        .final-score {
+            display: none;
+        }
+
+        .home-btn {
+            background-color: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .voice-btn {
+            margin-top: 20px;
+            background-color: #22e670;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Puzzle Solving Challenge</h1>
+        <div id="puzzleContainer" class="question-container"></div>
+        <div class="result" id="resultMessage"></div>
+        <div class="score">
+            <p>Current Score: <span id="score">0</span></p>
+        </div>
+        <button class="voice-btn" onclick="startVoiceRecognition()">🎙️ Speak Your Answer</button>
+        <div class="final-score" id="finalScoreContainer">
+            <h2>Quiz Completed!</h2>
+            <p>Your final score is: <span id="finalScore"></span></p>
+            <button class="home-btn" onclick="goHome()">Go to Home</button>
+        </div>
+    </div>
+
+    <script>
+let score = 0;
+let currentPuzzleIndex = 0;
+const puzzles = [
+    { question: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?", correctAnswer: "Echo", options: ["Echo", "Whisper", "Wind", "Sound"] },
+    { question: "What comes once in a minute, twice in a moment, but never in a thousand years?", correctAnswer: "The letter M", options: ["The letter M", "Time", "A second", "The moon"] },
+    { question: "I am not alive, but I can grow; I do not have lungs, but I need air; I do not have a mouth, but water kills me. What am I?", correctAnswer: "Fire", options: ["Fire", "Plant", "Cloud", "Rock"] },
+    { question: "What has keys but can't open locks?", correctAnswer: "Piano", options: ["Piano", "Keyboard", "Locksmith", "Map"] },
+    { question: "What has hands but can't clap?", correctAnswer: "Clock", options: ["Clock", "Robot", "Person", "Tree"] },
+    { question: "What can travel around the world while staying in the corner?", correctAnswer: "Stamp", options: ["Stamp", "Letter", "Postman", "Globe"] },
+    { question: "I am tall when I am young, and I am short when I am old. What am I?", correctAnswer: "Candle", options: ["Candle", "Pencil", "Tree", "Lamp"] },
+    { question: "What has a face but can't smile?", correctAnswer: "Clock", options: ["Clock", "Mirror", "Robot", "Doll"] },
+    { question: "What has an eye but cannot see?", correctAnswer: "Needle", options: ["Needle", "Storm", "Cyclops", "Camera"] },
+    { question: "What comes down but never goes up?", correctAnswer: "Rain", options: ["Rain", "Sun", "Cloud", "Water"] },
+    { question: "What gets wetter as it dries?", correctAnswer: "Towel", options: ["Towel", "Sponge", "Raincoat", "Dish"] },
+    { question: "What has a neck but no head?", correctAnswer: "Bottle", options: ["Bottle", "Guitar", "Shirt", "Shoe"] },
+    { question: "The more you take, the more you leave behind. What am I?", correctAnswer: "Footsteps", options: ["Footsteps", "Time", "Bags", "Sand"] },
+    { question: "What is full of holes but still holds a lot of weight?", correctAnswer: "Sieve", options: ["Sieve", "Net", "Bucket", "Bag"] },
+    { question: "What belongs to you but is used more by others?", correctAnswer: "Your name", options: ["Your name", "Your phone", "Your car", "Your bag"] },
+    { question: "What can you catch but not throw?", correctAnswer: "Cold", options: ["Cold", "Ball", "Fish", "Light"] },
+    { question: "What is always in front of you but can’t be seen?", correctAnswer: "Future", options: ["Future", "Air", "Wind", "Light"] },
+    { question: "What has one head, one foot, and four legs?", correctAnswer: "Bed", options: ["Bed", "Table", "Chair", "Person"] },
+    { question: "What has a heart that doesn't beat?", correctAnswer: "Artichoke", options: ["Artichoke", "Tree", "Stone", "Plant"] },
+    { question: "What is easy to get into but hard to get out of?", correctAnswer: "Trouble", options: ["Trouble", "Debt", "Game", "Prison"] },
+    { question: "What can be cracked, made, told, and played?", correctAnswer: "Joke", options: ["Joke", "Promise", "Secret", "Game"] },
+    { question: "What is always coming but never arrives?", correctAnswer: "Tomorrow", options: ["Tomorrow", "Today", "Next week", "Future"] },
+    { question: "What has a bed but never sleeps?", correctAnswer: "River", options: ["River", "Ocean", "Mountain", "Desert"] },
+    { question: "What is so fragile that saying its name breaks it?", correctAnswer: "Silence", options: ["Silence", "Glass", "Trust", "Word"] },
+    { question: "What is at the end of a rainbow?", correctAnswer: "W", options: ["W", "Gold", "Cloud", "Sun"] },
+    { question: "What can’t be put in a saucepan?", correctAnswer: "Its lid", options: ["Its lid", "Water", "Butter", "Food"] },
+    { question: "What has teeth but can't bite?", correctAnswer: "Comb", options: ["Comb", "Saw", "Fork", "Spoon"] },
+    { question: "What comes up but never goes down?", correctAnswer: "Age", options: ["Age", "Balloon", "Smoke", "Sun"] },
+    { question: "What can be touched but can’t be seen?", correctAnswer: "Feelings", options: ["Feelings", "Air", "Sound", "Dream"] },
+    { question: "What gets bigger the more you take away?", correctAnswer: "Hole", options: ["Hole", "Mountain", "Water", "Space"] },
+    { question: "What is brown and sticky?", correctAnswer: "Stick", options: ["Stick", "Tree", "Chocolate", "Mud"] },
+    { question: "What is made of water but can never be wet?", correctAnswer: "Shadow", options: ["Shadow", "Cloud", "Mist", "Fog"] },
+    { question: "What has a thumb and four fingers but is not alive?", correctAnswer: "Glove", options: ["Glove", "Hand", "Robot", "Animal"] },
+    { question: "What runs but never walks?", correctAnswer: "Water", options: ["Water", "Clock", "Stream", "Wind"] },
+    { question: "What can you break without touching it?", correctAnswer: "Promise", options: ["Promise", "Glass", "Egg", "Bone"] },
+    { question: "What has a head, a tail, but no body?", correctAnswer: "Coin", options: ["Coin", "Snake", "Whip", "Hair"] },
+    { question: "What is heavier than a ton of feathers?", correctAnswer: "Ton of bricks", options: ["Ton of bricks", "Pound of feathers", "Car", "Stone"] },
+    { question: "What kind of tree can you carry in your hand?", correctAnswer: "Palm", options: ["Palm", "Oak", "Pine", "Maple"] },
+    { question: "What can you find at the end of a rainbow?", correctAnswer: "Pot of gold", options: ["Pot of gold", "Cloud", "Water", "Tree"] },
+    { question: "What has a ring but no finger?", correctAnswer: "Phone", options: ["Phone", "Bell", "Tree", "Tire"] },
+    { question: "What is orange and sounds like a parrot?", correctAnswer: "Carrot", options: ["Carrot", "Pumpkin", "Orange", "Parrot"] },
+    { question: "What can be bigger than an elephant but never weighs anything?", correctAnswer: "Shadow", options: ["Shadow", "Cloud", "Memory", "Light"] },
+    { question: "What has a mouth but doesn’t eat?", correctAnswer: "River", options: ["River", "Box", "Cup", "Tree"] },
+    { question: "What is lighter than a feather but even the strongest man can’t hold it for much longer?", correctAnswer: "Breath", options: ["Breath", "Air", "Smoke", "Gas"] },
+    { question: "What always goes to bed with its shoes on?", correctAnswer: "Horse", options: ["Horse", "Dog", "Cat", "Human"] },
+    { question: "What has no beginning, end, or middle?", correctAnswer: "Circle", options: ["Circle", "Infinity", "Zero", "Moon"] },
+    { question: "What has an ear but can't hear?", correctAnswer: "Corn", options: ["Corn", "Cup", "Stone", "Tree"] },
+    { question: "What is big when it’s small and small when it’s big?", correctAnswer: "Baby", options: ["Baby", "Balloon", "Mountain", "Molecule"] },
+    { question: "What has no life but can grow?", correctAnswer: "Crystal", options: ["Crystal", "Tree", "Plant", "Mushroom"] }
+];
+
+// Shuffle the options
+function shuffleOptions(puzzle) {
+    const shuffledOptions = [...puzzle.options];
+    for (let i = shuffledOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
+    }
+    puzzle.options = shuffledOptions;
+}
+
+// Shuffle options for each puzzle
+puzzles.forEach(shuffleOptions);
+
+
+
+        // Shuffle the puzzles array
+        function shufflePuzzles() {
+            for (let i = puzzles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [puzzles[i], puzzles[j]] = [puzzles[j], puzzles[i]];
+            }
+        }
+
+        // Get 5 random questions after shuffling
+        function getRandomPuzzles() {
+            shufflePuzzles();
+            return puzzles.slice(0, 5);
+        }
+
+        const selectedPuzzles = getRandomPuzzles();
+
+        function displayPuzzle() {
+            const puzzle = selectedPuzzles[currentPuzzleIndex];
+            document.getElementById('puzzleContainer').innerHTML = `
+                <p>${puzzle.question}</p>
+                <div class="options">
+                    ${puzzle.options.map(option => `
+                        <button class="option-btn" onclick="checkAnswer('${option}')">${option}</button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('resultMessage').textContent = '';
+            speakQuestion(puzzle.question);
+        }
+
+        function speakQuestion(question) {
+            const utterance = new SpeechSynthesisUtterance(question);
+            utterance.lang = "en-US";
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function checkAnswer(userAnswer) {
+    const puzzle = selectedPuzzles[currentPuzzleIndex];
+    const resultMessage = document.getElementById('resultMessage');
+
+    // Normalize answers by trimming spaces and converting to lowercase
+    const normalizedUserAnswer = userAnswer.trim().toLowerCase();
+    const normalizedCorrectAnswer = puzzle.correctAnswer.trim().toLowerCase();
+
+    // Check if the normalized answers match
+    if (normalizedUserAnswer === normalizedCorrectAnswer) {
+        resultMessage.textContent = "Correct! 🎉";
+        resultMessage.className = "result correct";
+        score++;
+    } else {
+        resultMessage.textContent = `Incorrect! The correct answer is: ${puzzle.correctAnswer}`;
+        resultMessage.className = "result wrong";
+    }
+    document.getElementById('score').textContent = score;
+    currentPuzzleIndex++;
+
+    if (currentPuzzleIndex < selectedPuzzles.length) {
+        setTimeout(displayPuzzle, 2000); // Show next question after 2 seconds
+    } else {
+        setTimeout(showFinalScore, 2000); // Wait 2 seconds before showing the result page
+    }
+}
+
+        function startVoiceRecognition() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = (event) => {
+        const userAnswer = event.results[0][0].transcript.trim();
+        checkAnswer(userAnswer);
+    };
+
+    recognition.onerror = (event) => {
+        // Handle errors and log more specific details
+        console.error("Speech recognition error", event.error);
+        if (event.error === 'not-allowed') {
+            alert("Microphone access is blocked. Please allow access to the microphone.");
+        } else if (event.error === 'aborted') {
+            alert("Voice recognition was aborted. Please try again.");
+        } else {
+            alert("Sorry, I couldn't recognize your voice. Please try again.");
+        }
+    };
+
+    recognition.onend = () => {
+        console.log("Speech recognition has ended.");
+    };
+}
+
+
+        function checkAnswer(userAnswer) {
+    const puzzle = selectedPuzzles[currentPuzzleIndex];
+    const resultMessage = document.getElementById('resultMessage');
+
+    // Normalize the answers (case-insensitive, trim extra spaces)
+    const normalizedUserAnswer = userAnswer.trim().toLowerCase();  // User's answer normalization
+    const normalizedCorrectAnswer = puzzle.correctAnswer.trim().toLowerCase();  // Correct answer normalization
+
+    // Check if the normalized answer matches the correct answer
+    if (normalizedUserAnswer === normalizedCorrectAnswer) {
+        resultMessage.textContent = "Correct! 🎉";
+        resultMessage.className = "result correct";
+        score++;
+    } else {
+        resultMessage.textContent = `Incorrect! The correct answer is: ${puzzle.correctAnswer}`;
+        resultMessage.className = "result wrong";
+    }
+
+    // Update score and show next question
+    document.getElementById('score').textContent = score;
+    currentPuzzleIndex++;
+
+    if (currentPuzzleIndex < selectedPuzzles.length) {
+        setTimeout(displayPuzzle, 2000); // Show next question after 2 seconds
+    } else {
+        setTimeout(showFinalScore, 2000); // Wait 2 seconds before showing the result page
+    }
+}
+
+        function showFinalScore() {
+            document.getElementById('puzzleContainer').style.display = 'none';
+            document.getElementById('resultMessage').style.display = 'none';
+            document.getElementById('finalScoreContainer').style.display = 'block';
+            document.getElementById('finalScore').textContent = score;
+        }
+
+        function goHome() {
+            window.location.href = '/'; // This will redirect to the home page
+        }
+
+        // Initial setup
+        displayPuzzle();
+    </script>
+</body>
+</html>

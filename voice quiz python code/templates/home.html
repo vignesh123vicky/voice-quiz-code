@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Jarvis - Quiz & Puzzle Challenge</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        /* Main Content Wrapper */
+        .content-wrapper {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        /* Header Styling */
+        h1 {
+            font-size: 3.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Subheading */
+        p {
+            font-size: 1.4em;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+        }
+
+        /* Image Styling for Jarvis Avatar */
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 30px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Navigation List */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        ul li {
+            margin: 20px 0;
+        }
+
+        /* Button Styles */
+        a, .button {
+            text-decoration: none;
+            color: #fff;
+            background-color: #3498db;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        a:hover, .button:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Voice Command Button */
+        .voice-command {
+            padding: 12px 24px;
+            background-color: #2ecc71;
+            color: #fff;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .voice-command:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .voice-command:active {
+            transform: scale(0.98);
+        }
+
+        /* Footer Styling */
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1em;
+            color: #7f8c8d;
+        }
+
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Image of Jarvis (chatbot avatar) -->
+        <img src="https://media.istockphoto.com/id/1445426863/vector/chat-bot-vector-logo-design-concept.jpg?s=612x612&w=0&k=20&c=XDdfzS4lNW9yxQ0BQGZq9KMLL4bJ8ywXlYdAhBSuoCA=" alt="Jarvis Avatar" class="avatar">
+
+        <!-- Heading -->
+        <h1>Welcome to Meet Jarvis</h1>
+
+        <!-- Subheading -->
+        <p>Welcome to your AI-powered assistant. Let's get started!</p>
+
+        <!-- Navigation Links (Horizontal) -->
+        <ul>
+            <li><a href="/quiz" class="button">Play the Quiz</a></li>
+            <li><a href="/puzzle" class="button">Solve a Puzzle</a></li>
+        </ul>
+
+        <!-- Voice Command Button -->
+        <button class="voice-command" onclick="activateSpeech()">Activate Voice Command</button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Powered by <a href="#">Meet Jarvis</a> | Expo 2024
+    </footer>
+
+    <script>
+        function activateSpeech() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+
+            // Start speech recognition when button is clicked
+            recognition.start();
+
+            recognition.onstart = function() {
+                console.log("Voice recognition started...");
+            }
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                console.log("You said: " + transcript);
+                alert("You said: " + transcript);  // Show the spoken text in an alert box
+            }
+
+            recognition.onerror = function(event) {
+                alert("Error occurred in recognition: " + event.error);
+            }
+        }
+    </script>
+</body>
+</html>
